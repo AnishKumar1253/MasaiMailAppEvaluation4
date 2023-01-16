@@ -15,6 +15,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Entity
@@ -24,14 +26,17 @@ import jakarta.validation.constraints.Size;
 	    @Id
 	    @GeneratedValue(strategy = GenerationType.IDENTITY)
 	    @Column(name = "user_id")
+	    @jakarta.validation.constraints.Email
 	    private String id;
 
 	    @Column(name = "first_name", nullable = false)
 	    @NotNull
+	    @Pattern(regexp = "^[a-zA-Z]+$",message = "No numbers or specials characters")
 	    private String firstName;
 
 	    @Column(name = "last_name", nullable = false)
 	    @NotNull
+	    @Pattern(regexp = "^[a-zA-Z]+$",message = "No numbers or special characters")
 	    private String lastName;
 
 	    @Column(name = "email", unique = true, nullable = false)
@@ -46,6 +51,7 @@ import jakarta.validation.constraints.Size;
 	    @Column(name = "date_of_birth", nullable = false)
 	    @NotNull
 	    @JsonFormat(pattern="yyyy-MM-dd")
+	    @Past(message = "The date of birth should not be a future date")
 	    private LocalDate dateOfBirth;
 
 	    @OneToMany(mappedBy = "usert", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

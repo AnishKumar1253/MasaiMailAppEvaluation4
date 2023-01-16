@@ -2,6 +2,7 @@ package com.masai.app.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.masai.app.entity.Email;
@@ -11,65 +12,66 @@ import com.masai.app.repository.UserRepository;
 
 @Service
 public class UserServiceImpl implements UserService {
-    private final UserRepository userRepository;
-    private final EmailRepository emailRepository;
 
-    public UserServiceImpl(UserRepository userRepository, EmailRepository emailRepository) {
-        this.userRepository = userRepository;
-        this.emailRepository = emailRepository;
-    }
+	@Autowired
+	private UserRepository userRepository;
+	
+	@Autowired
+	private EmailRepository emailRepository;
+	
+	@Override
+	public List<User> registerUser(User user) {
+		System.out.print("hello");
+		//User u=this.userRepository.findById(user.getEmail()).get();
+		//if(u!=null) {
+		//	System.out.println("user already exists");
+		//	return null;
+		//}
+		this.userRepository.save(user);
+		return this.userRepository.findAll();
+	}
 
-    @Override
-    public User createUser(User user) {
-        return userRepository.save(user);
-    }
+	@Override
+	public boolean loginUser(User user) {
+		User u=this.userRepository.findById(user.getEmail()).get();
+		if(u==null) {
+			return false;
+		}
+		
+		return true;
+	}
 
-    @Override
-    public User loginUser(String email, String password) {
-        User user = userRepository.findByEmail(email);
-        if (user == null || !user.getPassword().equals(password)) {
-            throw new BadCredentialsException("Invalid email or password");
-        }
-        return user;
-    }
+	/** Get all the email where in the email entity the to attribute is associated with the 
+	 * current user
+	 */
+	@Override
+	public List<Email> getAllMails(String userEmail) {
+		User u=this.userRepository.findById(userEmail).get();
+		if(u!=null) {
+			return this.emailRepository.findByTo(u);
+		}
+		return null;
+	}
 
-    @Override
-    public User updateUser(String email, User user) {
-        User existingUser = userRepository.findByEmail(email);
-        if (existingUser == null) {
-            throw new UserNotFoundException("User with email " + email + " not found");
-        }
-        existingUser.setFirstName(user.getFirstName());
-        existingUser.setLastName(user.getLastName());
-        existingUser.setMobileNumber(user.getMobileNumber());
-        existingUser.setDateOfBirth(user.getDateOfBirth());
-        return userRepository.save(existingUser);
-    }
+	@Override
+	public List<Email> getAllStarredMails(String userEmail) {
+		User u=this.userRepository.findById(userEmail).get();
+		if(u!=null) {
+			List<Email> mails=this.emailRepository.findByToAndStarred(u,true);
+			return mails;
+		}
+		return null;
+	}
 
-    @Override
-    public void deleteUser(String email) {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            throw new UserNotFoundException("User with email " + email + " not found");
-        }
-        List<Email> emails = emailRepository.findBySenderOrRecipients(user, null);
-        emailRepository.deleteAll(emails);
-        userRepository.delete(user);
-    }
+	@Override
+	public User updateUser(User user) {
+		User u=this.userRepository.findById(user.getEmail()).get();
+		if(u==null) {
+			return null;
+		}
+		this.userRepository.save(user);
+		return user;
+	}
 
-    @Override
-    public List<Email> getUserEmails(String email, boolean starred) {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            throw new UserNotFoundException("User with email " + email + " not found");
-        }
-        List<Email> emails;
-        if (starred) {
-            emails = emailRepository.findBySenderOrRecipients(user, null);
-        } else {
-            emails = emailRepository.findBySenderOrRecipients(user, null);
-        }
-        return emails;
-    }
+	
 }
-
